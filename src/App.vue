@@ -1,27 +1,51 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
+  <div>
+    <h1>Your todos:</h1>
+  </div>
+  <div>
+    <ul>
+      <li v-for="todo in todos" :key="todo.id">{{ todo.title }}</li>
+    </ul>
+  </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
-import HelloWorld from './components/HelloWorld.vue';
+import { defineComponent, reactive, toRefs } from 'vue';
+
+interface Todo {
+  id: number;
+  title: string;
+  done: false;
+}
+
+interface State {
+  todos: Todo[];
+}
+
+function useTodosState() {
+  const state = reactive<State>({
+    todos: [],
+  });
+
+  return toRefs(state);
+}
+
+function getTodos(): Promise<Todo[]> {
+  return fetch('/api/v1/todo')
+    .then((res) => res.json())
+    .then((res) => res.todos);
+}
 
 export default defineComponent({
   name: 'App',
-  components: {
-    HelloWorld,
+  setup() {
+    const state = useTodosState();
+
+    getTodos().then((todos) => {
+      state.todos.value = todos;
+    });
+
+    return { ...state };
   },
 });
 </script>
-
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
